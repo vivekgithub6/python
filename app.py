@@ -12,12 +12,18 @@ cur = None
 if os.environ.get('DATABASE_URL') == None:
     print("Warning:'DATABASE_URL' not set")
 else:
-	url = urlparse.urlparse(os.environ.get('DATABASE_URL'))
-	db = "dbname=%s user=%s password=%s host=%s " % (url.path[1:], url.username, url.password, url.hostname)
-	schema = "schema.sql"
-	conn = psycopg2.connect(db)
-	cur = conn.cursor()
+	urlparse.uses_netloc.append("postgres")
+url = urlparse.urlparse(os.environ["DATABASE_URL"])
 
+conn = psycopg2.connect(
+    database=url.path[1:],
+    user=url.username,
+    password=url.password,
+    host=url.hostname,
+    port=url.port
+)
+	
+cur = conn.cursor()
 app = Flask(__name__)
 
 @app.route('/')
@@ -27,12 +33,12 @@ def hello():
     app.logger.info('Info')
     return 'Hello World!'
 
-@app.route('/contacts')
-def contacts():
+@app.route('/Accounts')
+def Accounts():
     try:
         my_list = []
         if cur != None:
-            cur.execute("""SELECT name from salesforce.contact""")
+            cur.execute("""SELECT name from salesforceaccounts.Account""")
             rows = cur.fetchall()
             response = ''
             
@@ -41,7 +47,7 @@ def contacts():
 
         return render_template('template.html',  results=my_list)
     except Exception as e:
-        print e
+        print ("e")
         return []
 
     
