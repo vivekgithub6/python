@@ -47,7 +47,7 @@ def Accounts():
 
         return render_template('template.html',  results=my_list)
     except Exception as e:
-        print ("e")
+        
         return []
 
     
