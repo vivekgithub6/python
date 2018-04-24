@@ -1,0 +1,775 @@
+<apex:page docType="html-5.0" controller="DragAndDropMainControllerNew" sidebar="true" showHeader="true" showQuickActionVfHeader="false" standardStylesheets="false" setup="false" lightningStyleSheets="true">
+    <apex:slds />
+
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.12.min.js"></script>
+	
+     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+        <link rel="stylesheet" href="/resources/demos/style.css"/	>
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <style>
+    input[name="file"] {
+       width: 50%;
+   }
+        #mainContent {
+            float: left;
+
+            overflow: hidden;
+            padding-top: 0px;
+            margin-top: 50px;
+        }
+
+        .row {
+            padding-bottom: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .testinput {
+            opacity: 0;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            padding: 60px 350px 60px 390px;
+           // padding: 63px 44% 60px 39%;
+            //padding: 60px 40% 60px 390px;
+            //padding: 60px 379px 60px 590px;
+            border-radius: 10px;
+            -moz-border-radius: 10px;
+            -webkit-transition: all 0.5s ease-in-out;
+            -moz-transition: all 0.5s ease-in-out;
+            transition: all 0.5s ease-in-out;
+           
+    		
+        }
+
+        .slds-scope .slds-file-selector__dropzone {
+
+            padding: 2px 4px 2px 4px;
+
+        }
+
+        .text {
+            position: relative;
+            left: 50%;
+            top: 75px;
+            
+            align-content:center;
+        }
+
+        input[type=submit] {
+            opacity: 1.0;
+            background-image: -moz-linear-gradient(top, #ffffff, #dfdfdf);
+            background-image: -webkit-gradient(linear, left top, left bottom, from(#ffffff), to(#dfdfdf));
+            cursor: pointer;
+        }
+        #myProgress {
+   			 width: 100%;
+    		 background-color: grey;
+			 border-radius: 1.25rem;
+		}
+		#myBar {
+    		width: 1%;
+    		height: 35px;
+    		background-color: #ADD8E6;
+    		border-radius: 1.25rem;
+		}                                          
+         
+		.close:hover,
+		.close:focus {
+   			 color: #000;
+    		 text-decoration: none;
+    		 cursor: pointer;
+		}
+		.ui-dialog-titlebar {
+    		//background-color: #F9A7AE;
+  			background-color:gray;	
+  			background-image: none;
+    		font-size: 160% !important;
+  			color: #000;
+  			border-radius: 0rem;
+  			background-clip: padding-box;
+  			box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.1);
+  			border: 1px solid rgb(221, 219, 218);
+  			padding-top:1%;   
+
+		} 
+    	.buttonclass{
+     		background-color: #4CAF50; /* Green */
+    		border: none;
+    		color: white;
+    		padding: 20px;
+    		text-align: center;
+    		text-decoration: none;
+    		display: inline-block;
+    		font-size: 16px;
+    		margin: 4px 2px;
+    		cursor: pointer;
+    	}
+		.ui-button .ui-icon {
+
+    		background-color: dimgrey;
+
+		}
+ 		.ui-dialog .ui-dialog-titlebar-close {
+   		 position: absolute;
+    		right: 0;
+		}
+
+         .modalclass{
+            display: none;
+		} 
+		
+		.slds-scope [class*=slds-size_], .slds-scope [class*=slds-size--] {
+    			flex: auto;
+		}
+
+    </style>
+
+
+
+    <apex:form >
+
+
+    <!-- Apex function for Sending the list of files to salesforce which are already inserted in AWS -->
+   <apex:actionFunction action="{!Inserawsdoc}" name="insertobj" rerender="selectid,thePanel" >
+        <apex:param name="aslist" assignTo="{!aslist}" value="" /> 
+    </apex:actionFunction>
+
+    
+    <!--Page Header start-->
+     <div class="slds-page-header">
+            <div class="slds-media">
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-standard-opportunity" title="Description of icon when needed">
+                        <svg class="slds-icon slds-page-header__icon" aria-hidden="true">
+                          <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#opportunity" />
+                        </svg>
+                     </span>
+                </div>
+                <div class="slds-media__body">
+                    <h1 class="slds-page-header__title slds-truncate slds-align-middle" title="Drag, Drop and Upload Files">Drag, Drop and Upload Files</h1>
+                    <p class="slds-text-body_small slds-line-height_reset"></p>
+                </div>
+            </div>
+        </div>
+    <!--Page Header end-->
+
+        <!--Select Access type section start-->
+        <div class="demo-only slds-grid" style="background: rgb(244, 246, 249); padding: 1rem;" id="accesdivid">
+            <div class="slds-panel slds-grid slds-grid_vertical slds-nowrap">
+                <div class="slds-form slds-form_stacked slds-grow slds-scrollable_y">
+                    <div class="slds-panel__section slds-border_bottom">
+                        <div class="slds-media">
+                            <div class="slds-media__body">
+                                <h2 class="slds-truncate slds-text-heading_small" title="Access Type"><a href="javascript:void(0);">Access Type</a></h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        <apex:actionRegion >
+                <div class="slds-panel__section" id="id1">
+                    
+                    <div class="slds-form-element" style="width:30%;">
+       					 <apeX:outputLabel value="Select Type of Access" styleclass="slds-form-element__label" rendered="{!AccessLevel}"></apex:outputlabel>
+
+                        <div class="slds-form-element__control">
+                            <apex:outputPanel rendered="{!AccessLevel}" id="panel">
+                            
+                                <!--<label class="slds-form-element__label" for="select-01">Select Type of Access</label>-->
+                              <div class="slds-select_container">
+                                <apex:selectList value="{!access}" size="1" styleClass="slds-select">
+        							<!-- action="{!accessTypeChanges}" -->
+                                    <apex:actionsupport event="onchange"  rerender="scriptId"/>
+                                    <apex:selectOptions value="{!accessList}" />
+
+                                </apex:selectList>
+                              </div>
+                            </apex:outputPanel>
+                        </div>                          
+                            <apex:outputPanel rendered="{!!AccessLevel}">
+                                 <p class="slds-text-color_weak slds-m-top--medium">Default Access Level is <b>Private</b>.</p>
+                            </apex:outputPanel>                       
+                                                   
+                        
+                    </div>
+                </div>
+        </apex:actionregion>
+            </div>
+        </div>
+        <!-- Select Access type section end-->
+
+        <!--select Folder section Start-->
+        <div id='folderSection' class="demo-only slds-grid" style="background: rgb(244, 246, 249); padding: 1rem;">
+            <div class="slds-panel slds-grid slds-grid_vertical slds-nowrap">
+                <div class="slds-form slds-form_stacked slds-grow slds-scrollable_y">
+                    <div class="slds-panel__section slds-border_bottom">
+                        <div class="slds-media">
+                            <div class="slds-media__body">
+                                <h2 class="slds-truncate slds-text-heading_small" title="Select Bucket and Folder"><a href="javascript:void(0);">Select Bucket and Folder</a></h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-panel__section">
+                    <label class="slds-form-element__label" for="select-01">Select folder in Amazon S3</label>
+                    <div class="slds-form-element" style="width:30%;">
+                        <div class="slds-form-element__control">
+                           <div class="slds-select_container" >
+                                <apex:selectList value="{!folder}" size="1" styleClass="slds-select">
+                                    <apex:actionsupport event="onchange" />
+
+                                    <apex:selectOptions value="{!folderList}" />
+                                </apex:selectList>
+                            </div>
+                          </div>
+                    </div>
+                    <p class="slds-text-color_weak slds-m-top--small">Files uploaded will be saved in <b>{!Bucket_Name}</b> bucket and <b>{!myIdPrefix}-{!objectName}/{!CurrentId}/</b> folder.</p>
+                </div>
+            </div>
+        </div>
+        <!--select Folder section end-->
+
+        <!--File drag and drop section start-->
+        <div class="demo-only slds-grid" style="background: rgb(244, 246, 249); padding: 1rem;">
+            <div class="slds-panel slds-grid slds-grid_vertical slds-nowrap">
+                <div class="slds-form slds-form_stacked slds-grow slds-scrollable_y">
+                    <div class="slds-panel__section slds-border_bottom">
+                        <div class="slds-media">
+                            <div class="slds-media__body">
+                                <h2 class="slds-truncate slds-text-heading_small" title="Select Type of Access"><a href="javascript:void(0);">Select Bucket and Folder</a></h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slds-panel__section">
+                   
+                    <apex:outputPanel id="thePanel">
+                    <div class="slds-card">
+                        <div class="slds-card__header slds-grid">
+                            <div class="slds-media slds-media_center slds-has-flexi-truncate">
+                                <div class="slds-media__figure">
+                                    <span class="slds-icon_container slds-icon-standard-contact" title="description of icon when needed">
+                                      <svg class="slds-icon slds-icon_small" aria-hidden="true">
+                                         <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/assets/icons/standard-sprite/svg/symbols.svg#contact" />
+                                       </svg>
+                                    </span>
+                                </div>
+                                <div class="slds-media__body">
+                                    <h1>
+                                        <a href="javascript:void(0);" class="slds-card__header-link slds-truncate" >
+                                        <span class="slds-text-heading_small" style="text-align:center;">Upload files to AWS</span>
+                                        </a>
+                                    </h1>
+                                </div>
+                            </div>
+                           <!-- <div class="slds-button">
+                                <input type="file" class="slds-file-selector__input" id="file" name="file" onchange="fileSelected();" multiple="true" aria-labelledby="file-selector-primary-label file-selector-secondary-label" />
+                            </div>-->
+
+                          <div class="slds-button slds-button_neutral">
+                              <div id="upload_button" style=" display: inline-block;">
+                            <label>
+                                  <input type="file" style="display:none;" id="file2" class="slds-file-selector__input" name="file" onchange="fileSelected();" multiple="true" aria-labelledby="file-selector-primary-label file-selector-secondary-label" />
+                               <span> Upload Files</span>
+                            </label>    
+                            </div>
+                            </div>
+
+
+                        </div>
+                      
+                        <div class="slds-card__body">
+                          <div class="slds-form-element">
+                              <div class="slds-form-element__control slds-file-selector__dropzone ">
+                                    <div class="slds-file-selector slds-file-selector--files ">
+                                         <!-- <div class="slds-file-selector__dropzone"> -->
+                                            <p class="text">Drag and drop file here </p>
+                                            <input type="file" class="testinput slds-file-selector__input slds-size_1-of-1 slds-small-size_1-of-3"  name="file" id="file" onchange="fileSelected();" multiple="true" aria-labelledby="file-selector-primary-label file-selector-secondary-label"/>
+
+                                            <label class="slds-file-selector__body" for="file-upload-input-01" id="file-selector-secondary-label">
+                                                <span class="slds-file-selector__text slds-medium-show"></span>
+                                            </label>
+                                        <!--  </div> --> 
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </apex:outputPanel>
+                </div>
+            </div>
+        </div>
+        <!--File drag and drop section end-->
+	
+
+    <!--Start of modal-->
+    <div id="dialog-form" style="width:100%;" title="uploading files">
+                        <br/>
+               <div id="myProgress" style="display:none;">
+                       
+                        <div id="myBar"></div>
+  			   </div>
+                        <br/>
+            <p class="slds-truncate slds-text-heading_small"  style="font-fize:120%;display:none;" title="Files Uploaded" id="displayheader"><b>Files Uploaded</b></p>
+                 <div id="displayfiles" style="display:none;"> 
+                        						<!-- <p><b>Files Uploaded</b></p> -->
+                  									<ul class="slds-list--vertical" id="prog1">
+															<!--<li id="prog1"></li>-->
+				 									 </ul>
+               							</div>       
+  			 </div>
+        
+         <!--Ensd of modal -->
+
+
+        <!--Start of last Section-->
+        <div class="demo-only slds-grid" style="background: rgb(244, 246, 249); padding: 1rem;">
+            <div class="slds-panel slds-grid slds-grid_vertical slds-nowrap">
+                <div class="slds-form slds-form_stacked slds-grow slds-scrollable_y">
+                    <div class="slds-panel__section slds-border_bottom">
+                        <div class="slds-media">
+                            <div class="slds-media__body">
+                                <h2 class="slds-truncate slds-text-heading_small" title="Select Type of Access"><a href="javascript:void(0);">Existing Cloud Documents</a></h2>
+                            </div>
+                            <div>
+                               <apex:commandButton Style="text-align: center;" Styleclass="slds-button slds-button_neutral" onclick="OpenAll();" value="Open All"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <apex:outputPanel id="selectid">
+        				
+                <div class="slds-panel__section" >
+                <div style="padding-left:40%;">
+                                                        <apex:actionStatus id="loader2" startText="hi">
+                                                            <apex:facet name="start">
+                                                                <div class="slds-spinner_container" style="position:fixed">          
+                                                                    <div class="slds-spinner slds-spinner--large slds-spinner_brand" role="alert">
+                                                                        <span class="slds-assistive-text">Loading</span>
+                                                                        <div class="slds-spinner__dot-a"></div>
+                                                                        <div class="slds-spinner__dot-b"></div>
+                                                                    </div>                             
+                                                                </div>               
+                                                            </apex:facet>                              
+                                                        </apex:actionStatus>
+                      </div>
+                    <apex:datatable value="{!awslist}" var="a" styleclass="slds-table slds-table_bordered slds-table_cell-buffer slds-table_col-bordered slds-table_striped dummmy">
+                        <apex:column >
+                        
+                            <apex:facet name="header">Action</apex:facet>
+                            <apex:commandLink action="{!deleterecord}" value="Del" rerender="selectid" status="loader2">
+                                <apex:param name="action" value="{!a.id}" assignTo="{!DeleterecordId}" />
+                            </apex:commandlink>
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Name</apex:facet>
+                            <apex:commandlink action="{!recordRedirect}" value="{!a.Name}" target="_blank">
+                                <apex:param name="rediredurl" value="{!a.id}" assignTo="{!nameredirect}" />
+                            </apex:commandlink>
+                            <!--<apex:outputlink value="{!a.Name}">{!a.Name}</apex:outputlink>-->
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Bucket Name</apex:facet>
+                            {!a.Bucket_Name__c}
+                        </apex:column>
+                        <apeX:column >
+                            <apex:facet name="header">Folder Id</apex:facet>
+                            {!a.Folder_Id__c}
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Preview Link</apex:facet>
+                            <!-- <apex:outputlink value="{!a.Document_Link__c}">Click Link to download</apex:outputlink>-->
+                            <apex:outputlink onclick="previewlink('{!a.Folder_Id__c}','{!a.Name}','{!a.Bucket_Name__c}')" target="_blank">Click Link to download</apex:outputlink>
+                            
+                        </apex:column>
+                        <apex:column >
+                            <apex:facet name="header">Access Level</apex:facet>
+                            {!a.Access_Level__c}
+                        </apex:column>
+
+                    </apex:datatable>
+
+                </div>
+                </apex:outputPanel>
+            </div>
+        </div>
+        <!-- End of last Section-->
+
+
+            <!--Start of Toast-->
+<div class="demo-only modalclass" style="height: 4rem; position:fixed; top:20%; left:30%; " id="modalId">
+    <div class="slds-notify_container slds-is-relative">
+        <div class="slds-notify slds-notify_toast slds-theme_error" role="alert">
+            <span class="slds-assistive-text">error</span>
+            <span class="slds-icon_container slds-icon-utility-error slds-m-right_small slds-no-flex slds-align-top" title="Description of icon when needed">
+             <svg aria-hidden="true" class="slds-icon slds-icon--small">
+                <use xmlns:xlink="http://www.w3.org/1999/xlink" 
+                 xlink:href="/apexpages/slds/latest/assets/icons/utility-sprite/svg/symbols.svg#error">
+                </use>
+              </svg>
+            </span>
+            <div class="slds-notify__content">
+                <h2 class="slds-text-heading_small ">Please check your bucket CORS settings.</h2>
+
+            </div>
+
+
+        <button class="slds-button slds-button_icon slds-notify__close slds-button_icon-inverse" title="Close" onclick="closetoast();">
+            <span class="slds-icon_container slds-icon-utility-close" >
+              <svg aria-hidden="true" class="slds-icon slds-icon--small">
+                <use xmlns:xlink="http://www.w3.org/1999/xlink" 
+                    xlink:href="/apexpages/slds/latest/assets/icons/utility-sprite/svg/symbols.svg#close">
+                </use>
+              </svg>
+             <span class="slds-assistive-text">Close</span>
+            </span>
+        </button>
+
+        </div>
+    </div>
+</div>
+<!--End of Toast-->
+
+<apex:outputPanel id="scriptId">
+ <apex:outputPanel >
+        <script>
+    	var accesslevel = '{!access}';
+		</script>
+    </apex:outputPanel>   
+    </apex:outputPanel>
+    </apex:form>
+	
+
+
+    <!-- Aws S3 Upload code -->
+    <script type="text/javascript">
+        var AccessKeyId = '{!Access_Key_Id}';
+        var secretAccessKey = '{!secretAccessKey}';
+		var BucketName = '{!Bucket_Name}';
+		//var BucketName = 'sampledragtest';
+		var prefix = '{!myIdPrefix}';
+        var objName = '{!objectName}';
+        var recId = '{!CurrentId}';
+        var Lookupname = '{!lookupName}';
+        var FolderName = prefix + '-' + objName + '/' + recId + '/';
+        var accesslevel = '{!access}';
+        var exisDcoList = '{!strObjList}';
+        var objlist = JSON.parse(exisDcoList);
+        var sortlist = [];
+        var VersionedFileName;
+        var fileVersion;
+        var fileNameWithoutExt;
+        var fileExtension;
+        var map1 = new Map();
+		
+         var showalert=true; 
+        if(showalert){       
+            alert('FolderName---' + FolderName);
+		  }
+     
+        AWS.config.update({
+            accessKeyId: AccessKeyId,
+            secretAccessKey: secretAccessKey,
+            region_config: "us-east-1"
+        });
+		
+		alert('accessKeyId'+AccessKeyId);
+		alert('secretAccessKey'+secretAccessKey);
+        function fileSelected() {
+            alert('access'+accesslevel);
+            //var accesslevel1='{!access}';
+            //var changesaccess='{!changedaccess}';
+            //alert('access'+changesaccess);
+            if(showalert){alert('Inside file selected');}
+            var choosefileid;
+            var file;
+            var file1 = document.getElementById("file") //All files
+            var file2= document.getElementById("file2") //All files
+            if(file1.files.length>0){
+                file=file1;
+                choosefileid=1;
+            }
+            else{
+                file=file2;
+                choosefileid=2;
+            }
+            var res =[];
+            //debugger;
+            a = file.files.length;
+            var uploadAllFiles=async()=>{
+                for (var i = 0; i < file.files.length; i++) {
+                //uploadSingleFile(i);
+                   await uploadSingleFile(i).then(r=>{res.push(r);console.log(r);});
+                }
+            	return res;
+            }
+            var uploadSingleFile=async (i) =>{
+                return new Promise(resolve =>{
+               if(showalert){
+                alert('inside upload single');         
+                alert(accesslevel);
+                alert(BucketName);
+                }
+                var bucket = new AWS.S3({
+                    params: {
+                        Bucket: BucketName
+                    }
+                });
+                var fileChooser;
+                if(choosefileid==1){
+                    fileChooser = document.getElementById('file');
+                }
+                else{
+                    fileChooser = document.getElementById('file2');
+                }
+                
+                var file = fileChooser.files[i];
+                var filename1 = file.name;
+                var filetype = file.type;
+                var size = file.size;
+                if (size >= 1024000000) {
+                    var gsize = (size / 1024000000) + " " + "GB";
+                } else {
+                    var gsize = (size / 1000000) + " " + "MB";
+                }
+
+                // *****Removing space from file name
+                var filename = file.name;
+                var filename2 = filename.replace(/\s/g,'_');
+                //****getting the file extension 
+                fileExtension = filename2.substr((filename2.lastIndexOf('.') + 1));
+                //***Getting the file name without extension
+                fileNameWithoutExt = filename2.substr(0,(filename2.lastIndexOf('.')));
+                alert('before if')
+                if (file) {
+                     for(index in objlist) {
+                      if(objlist[index].Actual_File_Name__c == filename2){
+                           var ver = objlist[index].File_Version_No__c;
+                           var version = parseInt(ver);
+                           sortlist.push(version);
+                           map1.set(version,filename2);
+                           alert('map1--' + map1);
+                           alert('sortlist--' + sortlist);
+
+                        }
+                    }
+					//**** fetching the version of file and increasing file version for the
+                    if (sortlist.length > 0){
+                        sortlist.sort(function(a, b){return b - a});
+                        alert('sortlist---'+ sortlist[0]);
+                        alert('map1.get(sortlist[0])' + map1.get(sortlist[0]));
+                        if(map1.get(sortlist[0]) == filename2)
+                        {
+                         var versort = sortlist[0];
+                         fileVersion = versort + 1;
+                         var finalver = fileVersion.toString();
+                         VersionedFileName =  fileNameWithoutExt +'_v'+finalver +'.'+fileExtension;
+                         map1.set(fileVersion,filename2);
+                         sortlist.push(fileVersion);
+                        }
+                        else
+                        {
+                             VersionedFileName =  fileNameWithoutExt+'.'+fileExtension ;
+                             fileVersion = 1;
+                             alert('else');
+                        }
+                       
+                    }else{
+                        VersionedFileName =  fileNameWithoutExt+'.'+fileExtension ;
+                        fileVersion = 1;
+                        alert();
+                    }
+                    var params = {
+                        //Key: "001-Account/0011I00000HBJia/" + file.name,
+                        Key: FolderName + VersionedFileName,
+                        ContentType: file.type,
+                        Body: file,
+                        Size: file.size,
+                        ACL: accesslevel
+                    };
+                    
+                     $(function() {
+                       
+            					$("#dialog-form").dialog({
+                                    //create: function(e, ui) {
+                                    //	$(this).dialog('widget')
+                        				//.find('.ui-dialog-titlebar')
+                                        //.removeClass('ui-corner-all')
+                                        //	.addClass('ui-corner-top');
+                                    //},
+                				autoOpen: false,
+                    			maxWidth:600,
+                    			maxHeight: 500,
+                    			width: 600,
+                    			height: 500,
+                    			modal: true,
+                	
+                    			buttons: {
+                   					 Done: function() {
+                    					$(this).dialog("close");
+                    
+                    				}
+                				},
+                    			close: function() {
+                        				
+                						$("#prog1").empty();
+                                }
+                				});
+            		});
+                
+                    var pro1=$("<li style='list-style:square;'>"+'&nbsp;'+VersionedFileName+'&nbsp;'+'-'+gsize+"</li>"+"<br/>");
+                    var errordisplay=$("<li style='list-style:square;'>"+'&nbsp;'+'Error in File Upload. Please check CORS settings in your bucket.'+"</li>"+"<br/>");
+					alert('after paraam');
+                      alert('access'+accesslevel);
+                    bucket.upload(params).on('httpUploadProgress', function(evt) {
+                        //alert('after fun');
+                        
+                    	 var per = parseInt((evt.loaded * 100) / evt.total) + '%';
+                        document.getElementById("myBar").style.width = per;
+                        document.getElementById("myProgress").style.display="block";
+                        document.getElementById("displayfiles").style.display="block";
+                        document.getElementById("displayheader").style.display="block";
+                         
+							 
+                    }).send(function(err, data) {
+                        		if (!err) {
+									alert("File uploaded Successfully");
+                           			// getSingleFile(filename1);
+                            		$("#dialog-form").dialog("open");
+                            		$("#prog1").append(pro1);
+                            		alert('in success'+sortlist);
+                                	alert('Inside getSingleFile');
+                                	AWS.config.update({
+                                    	accessKeyId: AccessKeyId,
+                                    	secretAccessKey: secretAccessKey,
+                                    	region_config: "us-east-1"
+                                	});
+                                	var s3 = new AWS.S3();
+                                	var a = FolderName + '/' + filename1;
+                                	alert('a' + a);
+                                	alert('BucketName' + BucketName);
+                                	var params = {
+                                    	Bucket: BucketName,
+                                    	Key: FolderName + VersionedFileName
+                                	};
+                                	var previewlink;
+                                    s3.getSignedUrl('getObject', params, function(err, url) {
+                                            console.log('The URL is', url); // this line gets url for the objetc created.
+                                            previewlink = url;
+                                        	resolve({'fileVersion':fileVersion,'filename2':filename2,'VersionedFileName':VersionedFileName,
+                                            'BucketName': BucketName,'previewlink':previewlink, 'FolderName':FolderName, 'accesslevel':accesslevel, 'recId':recId, 'Lookupname':Lookupname});
+                                        });
+                                    /* methodOneInJavascript(previewlink,filename1,FolderName, Lookupname);*/
+                                    /* Visualforce.remoting.Manager.invokeAction('{!$RemoteAction.DragAndDropMainControllerNew.save}', filename2,VersionedFileName,fileVersion, BucketName, FolderName, previewlink, accesslevel, recId, Lookupname, function(result, event) {
+                                    	if (event.status) {
+                                        	res.push(result);
+                                            //debugger;
+                                            alert('res' + JSON.stringify(res));
+                                            alert('event.status' + event.status);
+                                                // window.location.reload();
+                                         } else if (event.type === 'exception') {
+                                            alert('exception' + exception);
+                                         }
+                                    });*/
+                                   	                
+                                 } 
+                                else {
+                                    // var targetElement = document.getElementById("modalId");
+                            alert('targetElement'+ err);
+                                    //targetElement.classList.remove("modalclass");
+                             var errmsg = err.message;
+                            }
+                    }); 
+                }
+                });
+                return false;
+            }
+                                                     
+                                                     var actualFileDetails=[];
+                        async function actualFileDetails_FN(){await uploadAllFiles().then(r=>{console.log(r);actualFileDetails=r;}); return actualFileDetails;}                            
+                                                     actualFileDetails_FN().then(r=>{console.log(r[0]);console.log(r.length);
+                                                        var temp=JSON.stringify(r);
+                                                        debugger;
+                                                        console.log(JSON.stringify(r));
+                                                        insertobj(JSON.stringify(r));
+														 $('#dialog-form').dialog('option', 'title', 'Upload completed');
+														 
+                                                    	for(var i=0;i<r.length;i++){console.log(r[i]);}
+                                                  
+                                                    });  
+                        //uploadAllFiles().then(r=>{return Promise.resolve(r);}).then(r=>{console.log(r);console.log(r.length);});                               
+        }
+
+
+        AWS.config.update({
+            accessKeyId: "AKIAILFHCCPHAAEMWPDQ",
+            secretAccessKey: "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",
+            region_config: "us-east-1"
+        });
+
+
+        function previewlink(previewFolderName,previewfilename,previewBucketName){
+        
+         var bucket = new AWS.S3({
+                    params: {
+                        //Bucket: 'sfdc-einstein-demo'
+                        Bucket:previewBucketName
+                    }
+                });
+                
+            // var a = FolderName + '/' + filename1;
+             //alert('a' + a);
+             alert(bucket);
+             var params = {
+                     Bucket: previewBucketName,
+                       // Key: "001-Account/0011I00000HBJia/" + filename1
+                       Key: previewFolderName + previewfilename
+              };
+              alert('params',JSON.stringify(params));
+             
+              var s3 = new AWS.S3();
+                 s3.getSignedUrl('getObject', params, function(err, url) {
+                          alert('Correct url' + url);
+                          previewlink1 = url;
+                          console.log('The URL is', url); // this line gets url for the objetc created.
+                          
+                       });   
+                alert('previewlink'+previewlink1);
+                window.open(previewlink1);
+        
+        
+        
+        
+        }
+
+    function closetoast(){
+
+        var targetElement = document.getElementById("modalId");
+        alert('targetElement'+ targetElement);
+        targetElement.classList.add("modalclass");
+        
+       }
+        
+      function OpenAll() {
+          <apex:repeat value="{!awslist}" var="lis">
+            
+                previewlink('{!lis.Folder_Id__c}','{!lis.Name}','{!lis.Bucket_Name__c}');
+
+        
+           </apex:repeat>   
+
+         }
+
+
+
+    </script>
+
+
+</apex:page>
+
+
+new Page
